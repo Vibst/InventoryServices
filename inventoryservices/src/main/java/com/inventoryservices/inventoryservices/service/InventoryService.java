@@ -1,5 +1,7 @@
 package com.inventoryservices.inventoryservices.service;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -49,7 +51,7 @@ public class InventoryService {
     public Inventory getSkuCodeInORderService(String skuCode) {
         try {
 
-            String apiUrl = "http://localhost:8081/api/v1/order/" + skuCode;
+            String apiUrl = "http://ORDER-SERVICE/api/v1/order/" + skuCode;
 
             ResponseEntity<String> aa = restTemplate.getForEntity(apiUrl, String.class);
             System.out.println("--------------" + aa);
@@ -96,5 +98,16 @@ public class InventoryService {
         }
 
     }
+
+    public List<Inventory> getAllListInventory() {
+       try {
+
+        return inventoryRepository.findAll();
+        
+       } catch (Exception e) {
+        throw new UnsupportedOperationException("Unimplemented method 'getAllListInventory'"+e.getMessage());
+       
+    }
+}
 
 }

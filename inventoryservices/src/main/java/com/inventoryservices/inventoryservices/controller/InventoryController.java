@@ -15,6 +15,7 @@ import com.inventoryservices.inventoryservices.service.InventoryService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -22,6 +23,13 @@ public class InventoryController {
 
     @Autowired
     private InventoryService service;
+
+    @GetMapping("/inventory")
+    public ResponseEntity<List<Inventory>> getAllInventory(){
+        List<Inventory> isListInventory = service.getAllListInventory();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(isListInventory);
+    }
 
     @PostMapping("/inventory")
     public ResponseEntity<Inventory> saveOrder(@RequestBody Inventory inventory){
