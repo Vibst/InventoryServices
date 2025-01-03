@@ -48,7 +48,7 @@ public class InventoryService {
 
     }
 
-    public Inventory getSkuCodeInORderService(String skuCode) {
+    public Inventory getSkuCodeInOrderService(String skuCode) {
         try {
 
             String apiUrl = "http://ORDER-SERVICE/api/v1/order/" + skuCode;
