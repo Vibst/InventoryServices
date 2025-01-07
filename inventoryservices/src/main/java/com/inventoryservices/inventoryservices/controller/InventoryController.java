@@ -2,6 +2,7 @@ package com.inventoryservices.inventoryservices.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import com.inventoryservices.inventoryservices.service.InventoryService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,12 @@ public class InventoryController {
 
     @Autowired
     private InventoryService service;
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+    @Value("${kafka.topic.name}")
+    private String topicName;
 
     @GetMapping("/inventory")
     public ResponseEntity<List<Inventory>> getAllInventory() {
@@ -99,6 +107,12 @@ public class InventoryController {
         // return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         // .body(fallbackInventory);
         return fallbackInventory;
+    }
+
+    @PostMapping("/{message}")
+    public String sendMessage(@PathVariable String message) {
+        kafkaTemplate.send(topicName, message);
+        return "Message sent: " + message;
     }
 
 }
