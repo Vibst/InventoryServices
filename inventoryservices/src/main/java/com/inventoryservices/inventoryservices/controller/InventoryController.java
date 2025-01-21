@@ -14,11 +14,7 @@ import com.inventoryservices.inventoryservices.entity.Inventory;
 import com.inventoryservices.inventoryservices.service.InventoryService;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
-import io.github.resilience4j.timelimiter.annotation.TimeLimiter;
 import org.springframework.beans.factory.annotation.Value;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.http.HttpStatus;
 
 import java.util.*;
@@ -32,11 +28,6 @@ public class InventoryController {
     @Autowired
     private InventoryService service;
 
-    @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
-
-    @Value("${kafka.topic.name}")
-    private String topicName;
 
     @GetMapping("/inventory")
     public ResponseEntity<List<Inventory>> getAllInventory() {
@@ -109,10 +100,6 @@ public class InventoryController {
         return fallbackInventory;
     }
 
-    @PostMapping("/{message}")
-    public String sendMessage(@PathVariable String message) {
-        kafkaTemplate.send(topicName, message);
-        return "Message sent: " + message;
-    }
+
 
 }
