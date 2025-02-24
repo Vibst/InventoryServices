@@ -1,6 +1,10 @@
 package com.inventoryservices.inventoryservices.service;
 
+import java.io.IOException;
+import java.security.Guard;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,14 +15,20 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.inventoryservices.inventoryservices.entity.Inventory;
-import com.inventoryservices.inventoryservices.events.OrderPlacedEvents;
 import com.inventoryservices.inventoryservices.helper.EntityConvertTODTO;
 import com.inventoryservices.inventoryservices.model.InventoryModel;
 import com.inventoryservices.inventoryservices.repositoty.InventoryRepository;
 
-import jakarta.annotation.PostConstruct;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.exporter.PushGateway;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.Gauge;
+import io.prometheus.client.exporter.PushGateway;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class InventoryService {
 
     @Autowired
@@ -30,9 +40,11 @@ public class InventoryService {
     @Autowired
     private RestTemplate restTemplate;
 
-
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
+
+   
+
 
     public Object saveInventory(Inventory inventory) {
         try {
@@ -64,7 +76,7 @@ public class InventoryService {
             String apiUrl = "http://ORDER-SERVICE/api/v1/order/" + skuCode;
 
             ResponseEntity<String> aa = restTemplate.getForEntity(apiUrl, String.class);
-            System.out.println("--------------" + aa);
+           log.info("--------------" + aa);
 
             ObjectMapper mapper = new ObjectMapper();
             JsonNode rootNode = mapper.readTree(aa.getBody());
@@ -73,9 +85,9 @@ public class InventoryService {
             String orderName = rootNode.path("orderName").asText();
             String skuCodes = rootNode.path("skuCode").asText();
 
-            System.out.println("Product Name: " + productName);
-            System.out.println("Order Name: " + orderName);
-            System.out.println("SKU Code: " + skuCodes);
+           log.info("Product Name: " + productName);
+           log.info("Order Name: " + orderName);
+           log.info("SKU Code: " + skuCodes);
 
             // Array of order items
             JsonNode orderItems = rootNode.path("orderItems");
@@ -84,20 +96,52 @@ public class InventoryService {
                 String orderItemsUser = item.path("orderItemsUser").asText();
                 boolean isActiveOrder = item.path("isActiveOrder").asBoolean();
 
-                System.out.println("Order Items User: " + orderItemsUser);
-                System.out.println("Is Active Order: " + isActiveOrder);
-                System.out.println("Order Items: ");
+               log.info("Order Items User: " + orderItemsUser);
+               log.info("Is Active Order: " + isActiveOrder);
+               log.info("Order Items: ");
                 for (JsonNode orderItem : orderItemsList) {
-                    System.out.println("  - " + orderItem.asText());
+                   log.info("  - " + orderItem.asText());
                 }
-                kafkaTemplate.send("sendNotification", "CR001"+ " - " + " " +orderItemsUser);
+                // kafkaTemplate.send("sendNotification", "CR001" + " - " + " " + orderItemsUser);
+                log.info("The value is Active Product is {}:",isActiveOrder);
 
                 if (isActiveOrder) {
 
-                    // call to product service which save to entry && logics of email notification Services 
+                    
+                    CollectorRegistry registry = new CollectorRegistry(); 
+
+                    Gauge gauge = Gauge.build()
+                        .name("my_custom_metric") // Provide a valid name (no spaces)
+                        .help("My Metric Description")
+                        .labelNames("status", "os") // Correct: all label names in one call
+                        .register(registry);
+
+                        Gauge analytics_product_name = Gauge.build().name("product_name").help("Account Product").register(registry);
+                        analytics_product_name.set(1);
+                        
+
+                    Gauge AnalyticsOrderName = Gauge.build().name("orderName").help("orderName").register(registry);
+                    AnalyticsOrderName.set(2);
+
+                    Gauge AnalyticsSkuCode =Gauge.build().name("sku_code").help("SKU Code Metric").register(registry);
+                    AnalyticsSkuCode.set(3);
+
+                    // gauge.labels("User Items").set(4);
+                    // gauge.labels("Active Order").set(5);
+
+                    PushGateway pushGateway = new PushGateway("192.168.8.85:9091"); 
+
+                     pushGateway.pushAdd(registry, "realDataAnalytics"); 
+                    
+
+                    
+                    
+
+                   
 
                 }
             }
+            System.out.println("Metric pushed successfully!");
 
             return null;
 
@@ -117,8 +161,5 @@ public class InventoryService {
 
         }
     }
-
-
-
 
 }

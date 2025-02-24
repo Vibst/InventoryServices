@@ -10,7 +10,6 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 @EnableDiscoveryClient
 public class InventoryservicesApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(InventoryservicesApplication.class, args);
 	}

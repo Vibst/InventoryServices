@@ -2,7 +2,7 @@ package com.inventoryservices.inventoryservices.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +14,9 @@ import com.inventoryservices.inventoryservices.entity.Inventory;
 import com.inventoryservices.inventoryservices.service.InventoryService;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import org.springframework.beans.factory.annotation.Value;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+
 import org.springframework.http.HttpStatus;
 
 import java.util.*;
@@ -27,6 +29,19 @@ public class InventoryController {
 
     @Autowired
     private InventoryService service;
+    private final Counter counter;
+
+    public InventoryController(MeterRegistry registry){
+        this.counter = Counter.builder("custom-metrics").register(registry);
+
+    }
+
+    @GetMapping("/count")
+    public String getCountIncre(){
+        counter.increment();
+        return "hello  world";
+
+    }
 
 
     @GetMapping("/inventory")
@@ -99,6 +114,8 @@ public class InventoryController {
         // .body(fallbackInventory);
         return fallbackInventory;
     }
+
+
 
 
 
